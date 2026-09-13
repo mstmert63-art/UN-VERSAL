@@ -1,0 +1,836 @@
+-- Servisler
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting")
+
+-- Yerel oyuncu
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local RootPart = Character:WaitForChild("HumanoidRootPart")
+
+-- GUI oluşturma
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AI_Hile_Menu_Mert_Enser"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.Parent = CoreGui
+
+-- Ana Frame (Siyah arka plan, başlangıçta kapalı)
+local AnaFrame = Instance.new("Frame")
+AnaFrame.Name = "AnaFrame"
+AnaFrame.Size = UDim2.new(0, 0, 0, 0)
+AnaFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+AnaFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+AnaFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+AnaFrame.BorderSizePixel = 0
+AnaFrame.Active = true
+AnaFrame.Draggable = true
+AnaFrame.Visible = false
+AnaFrame.Parent = ScreenGui
+
+local AnaCorner = Instance.new("UICorner")
+AnaCorner.CornerRadius = UDim.new(0, 15)
+AnaCorner.Parent = AnaFrame
+
+-- Ana frame stroke (kırmızı çerçeve)
+local AnaStroke = Instance.new("UIStroke")
+AnaStroke.Color = Color3.fromRGB(255, 0, 0)
+AnaStroke.Thickness = 2
+AnaStroke.Transparency = 0
+AnaStroke.Parent = AnaFrame
+
+-- Üst bar (Kırmızı arka plan)
+local UstBar = Instance.new("Frame")
+UstBar.Name = "UstBar"
+UstBar.Size = UDim2.new(1, 0, 0, 45)
+UstBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+UstBar.BorderSizePixel = 0
+UstBar.Parent = AnaFrame
+
+local UstBarCorner = Instance.new("UICorner")
+UstBarCorner.CornerRadius = UDim.new(0, 15)
+UstBarCorner.Parent = UstBar
+
+-- Üst bar alt kısmı düzeltme
+local UstBarFix = Instance.new("Frame")
+UstBarFix.Size = UDim2.new(1, 0, 0, 15)
+UstBarFix.Position = UDim2.new(0, 0, 1, -15)
+UstBarFix.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+UstBarFix.BorderSizePixel = 0
+UstBarFix.Parent = UstBar
+
+-- Başlık
+local Baslik = Instance.new("TextLabel")
+Baslik.Size = UDim2.new(1, -100, 1, 0)
+Baslik.Position = UDim2.new(0, 15, 0, 0)
+Baslik.BackgroundTransparency = 1
+Baslik.Text = "MERT SS - ENSER SS | AI HİLE MENÜSÜ"
+Baslik.TextColor3 = Color3.fromRGB(255, 255, 255)
+Baslik.TextScaled = true
+Baslik.Font = Enum.Font.GothamBold
+Baslik.TextXAlignment = Enum.TextXAlignment.Left
+Baslik.Parent = UstBar
+
+-- Kapatma butonu (Çarpı - animasyonlu)
+local KapatButon = Instance.new("TextButton")
+KapatButon.Name = "KapatButon"
+KapatButon.Size = UDim2.new(0, 32, 0, 32)
+KapatButon.Position = UDim2.new(1, -42, 0, 6)
+KapatButon.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+KapatButon.Text = "✕"
+KapatButon.TextColor3 = Color3.fromRGB(255, 255, 255)
+KapatButon.TextScaled = true
+KapatButon.Font = Enum.Font.GothamBold
+KapatButon.Parent = UstBar
+
+local KapatCorner = Instance.new("UICorner")
+KapatCorner.CornerRadius = UDim.new(0, 16)
+KapatCorner.Parent = KapatButon
+
+local KapatStroke = Instance.new("UIStroke")
+KapatStroke.Color = Color3.fromRGB(255, 255, 255)
+KapatStroke.Thickness = 1
+KapatStroke.Parent = KapatButon
+
+-- Minimize butonu
+local MinButon = Instance.new("TextButton")
+MinButon.Name = "MinButon"
+MinButon.Size = UDim2.new(0, 32, 0, 32)
+MinButon.Position = UDim2.new(1, -80, 0, 6)
+MinButon.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+MinButon.Text = "—"
+MinButon.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinButon.TextScaled = true
+MinButon.Font = Enum.Font.GothamBold
+MinButon.Parent = UstBar
+
+local MinCorner = Instance.new("UICorner")
+MinCorner.CornerRadius = UDim.new(0, 16)
+MinCorner.Parent = MinButon
+
+-- Oyun adı bölümü
+local OyunAdiLabel = Instance.new("TextLabel")
+OyunAdiLabel.Size = UDim2.new(1, -30, 0, 22)
+OyunAdiLabel.Position = UDim2.new(0, 15, 0, 55)
+OyunAdiLabel.BackgroundTransparency = 1
+OyunAdiLabel.Text = "⚡ OYUN ADI (AI otomatik ayrıştırır)"
+OyunAdiLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+OyunAdiLabel.TextScaled = true
+OyunAdiLabel.Font = Enum.Font.Gotham
+OyunAdiLabel.TextXAlignment = Enum.TextXAlignment.Left
+OyunAdiLabel.Parent = AnaFrame
+
+local OyunAdiBox = Instance.new("TextBox")
+OyunAdiBox.Size = UDim2.new(1, -30, 0, 38)
+OyunAdiBox.Position = UDim2.new(0, 15, 0, 80)
+OyunAdiBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+OyunAdiBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+OyunAdiBox.PlaceholderText = "Örn: Arsenal, Blox Fruits, Jailbreak..."
+OyunAdiBox.Text = ""
+OyunAdiBox.TextScaled = true
+OyunAdiBox.Font = Enum.Font.Gotham
+OyunAdiBox.ClearTextOnFocus = false
+OyunAdiBox.Parent = AnaFrame
+
+local OyunBoxCorner = Instance.new("UICorner")
+OyunBoxCorner.CornerRadius = UDim.new(0, 8)
+OyunBoxCorner.Parent = OyunAdiBox
+
+local OyunBoxStroke = Instance.new("UIStroke")
+OyunBoxStroke.Color = Color3.fromRGB(255, 0, 0)
+OyunBoxStroke.Thickness = 1
+OyunBoxStroke.Parent = OyunAdiBox
+
+-- Hile isteği bölümü
+local HileLabel = Instance.new("TextLabel")
+HileLabel.Size = UDim2.new(1, -30, 0, 22)
+HileLabel.Position = UDim2.new(0, 15, 0, 125)
+HileLabel.BackgroundTransparency = 1
+HileLabel.Text = "🤖 HİLE İSTEĞİ (AI sentezler ve kodlar)"
+HileLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+HileLabel.TextScaled = true
+HileLabel.Font = Enum.Font.Gotham
+HileLabel.TextXAlignment = Enum.TextXAlignment.Left
+HileLabel.Parent = AnaFrame
+
+local HileBox = Instance.new("TextBox")
+HileBox.Size = UDim2.new(1, -30, 0, 38)
+HileBox.Position = UDim2.new(0, 15, 0, 150)
+HileBox.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+HileBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+HileBox.PlaceholderText = "Örn: fly, esp, infinity jump, silah ışınlama..."
+HileBox.Text = ""
+HileBox.TextScaled = true
+HileBox.Font = Enum.Font.Gotham
+HileBox.ClearTextOnFocus = false
+HileBox.Parent = AnaFrame
+
+local HileBoxCorner = Instance.new("UICorner")
+HileBoxCorner.CornerRadius = UDim.new(0, 8)
+HileBoxCorner.Parent = HileBox
+
+local HileBoxStroke = Instance.new("UIStroke")
+HileBoxStroke.Color = Color3.fromRGB(255, 0, 0)
+HileBoxStroke.Thickness = 1
+HileBoxStroke.Parent = HileBox
+
+-- AI Sentez butonu
+local SentezButon = Instance.new("TextButton")
+SentezButon.Size = UDim2.new(1, -30, 0, 42)
+SentezButon.Position = UDim2.new(0, 15, 0, 195)
+SentezButon.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+SentezButon.Text = "🧠 AI İLE SENTEZLE VE ÇALIŞTIR"
+SentezButon.TextColor3 = Color3.fromRGB(255, 255, 255)
+SentezButon.TextScaled = true
+SentezButon.Font = Enum.Font.GothamBold
+SentezButon.Parent = AnaFrame
+
+local SentezCorner = Instance.new("UICorner")
+SentezCorner.CornerRadius = UDim.new(0, 8)
+SentezCorner.Parent = SentezButon
+
+local SentezStroke = Instance.new("UIStroke")
+SentezStroke.Color = Color3.fromRGB(255, 255, 255)
+SentezStroke.Thickness = 1
+SentezStroke.Parent = SentezButon
+
+-- Durum göstergesi
+local DurumLabel = Instance.new("TextLabel")
+DurumLabel.Size = UDim2.new(1, -30, 0, 28)
+DurumLabel.Position = UDim2.new(0, 15, 0, 243)
+DurumLabel.BackgroundTransparency = 1
+DurumLabel.Text = "Durum: AI hazır, bekleniyor..."
+DurumLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+DurumLabel.TextScaled = true
+DurumLabel.Font = Enum.Font.Gotham
+DurumLabel.TextXAlignment = Enum.TextXAlignment.Left
+DurumLabel.Parent = AnaFrame
+
+-- Hızlı butonlar scroll frame
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Size = UDim2.new(1, -30, 0, 190)
+ScrollFrame.Position = UDim2.new(0, 15, 0, 275)
+ScrollFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+ScrollFrame.BorderSizePixel = 0
+ScrollFrame.ScrollBarThickness = 6
+ScrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 0, 0)
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollFrame.Parent = AnaFrame
+
+local ScrollCorner = Instance.new("UICorner")
+ScrollCorner.CornerRadius = UDim.new(0, 8)
+ScrollCorner.Parent = ScrollFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 6)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = ScrollFrame
+
+-- Kapanma animasyonu (küçülerek yok olma)
+local function KapatAnimasyon()
+    local tween = TweenService:Create(AnaFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        BackgroundTransparency = 1
+    })
+    tween:Play()
+    
+    for _, obj in pairs(AnaFrame:GetDescendants()) do
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            TweenService:Create(obj, TweenInfo.new(0.3), {TextTransparency = 1, BackgroundTransparency = 1}):Play()
+        elseif obj:IsA("UIStroke") then
+            TweenService:Create(obj, TweenInfo.new(0.3), {Transparency = 1}):Play()
+        end
+    end
+    
+    task.wait(0.5)
+    AnaFrame.Visible = false
+    -- Sıfırla
+    AnaFrame.Size = UDim2.new(0, 420, 0, 480)
+    AnaFrame.BackgroundTransparency = 0
+    for _, obj in pairs(AnaFrame:GetDescendants()) do
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            obj.TextTransparency = 0
+        elseif obj:IsA("UIStroke") then
+            obj.Transparency = 0
+        end
+    end
+end
+
+-- Açılma animasyonu (büyüyerek açılma)
+local function AcAnimasyon()
+    AnaFrame.Visible = true
+    AnaFrame.Size = UDim2.new(0, 0, 0, 0)
+    AnaFrame.BackgroundTransparency = 1
+    
+    for _, obj in pairs(AnaFrame:GetDescendants()) do
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            if obj ~= AnaFrame then obj.TextTransparency = 1 end
+        elseif obj:IsA("UIStroke") then
+            obj.Transparency = 1
+        end
+    end
+    
+    local tween = TweenService:Create(AnaFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 420, 0, 480),
+        BackgroundTransparency = 0
+    })
+    tween:Play()
+    
+    task.wait(0.3)
+    
+    for _, obj in pairs(AnaFrame:GetDescendants()) do
+        if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+            TweenService:Create(obj, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
+        elseif obj:IsA("UIStroke") then
+            TweenService:Create(obj, TweenInfo.new(0.3), {Transparency = 0}):Play()
+        end
+    end
+end
+
+-- Yüzen top
+local YuzuyorTop = nil
+local TopAnimasyonAktif = false
+
+local function TopuOlustur()
+    if YuzuyorTop then YuzuyorTop:Destroy() end
+    
+    YuzuyorTop = Instance.new("Frame")
+    YuzuyorTop.Name = "YuzuyorTop"
+    YuzuyorTop.Size = UDim2.new(0, 0, 0, 0)
+    YuzuyorTop.Position = UDim2.new(0, 60, 0.5, -35)
+    YuzuyorTop.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    YuzuyorTop.BorderSizePixel = 0
+    YuzuyorTop.Active = true
+    YuzuyorTop.Draggable = true
+    YuzuyorTop.Parent = ScreenGui
+    
+    local TopCorner = Instance.new("UICorner")
+    TopCorner.CornerRadius = UDim.new(0, 35)
+    TopCorner.Parent = YuzuyorTop
+    
+    local TopStroke = Instance.new("UIStroke")
+    TopStroke.Color = Color3.fromRGB(255, 255, 255)
+    TopStroke.Thickness = 2
+    TopStroke.Parent = YuzuyorTop
+    
+    local TopLabel = Instance.new("TextLabel")
+    TopLabel.Size = UDim2.new(1, 0, 1, 0)
+    TopLabel.BackgroundTransparency = 1
+    TopLabel.Text = "Mert ss\nEnser ss"
+    TopLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    TopLabel.TextScaled = true
+    TopLabel.Font = Enum.Font.GothamBold
+    TopLabel.TextTransparency = 1
+    TopLabel.Parent = YuzuyorTop
+    
+    -- Topu büyütme animasyonu
+    TweenService:Create(YuzuyorTop, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 70, 0, 70)
+    }):Play()
+    
+    task.wait(0.3)
+    TweenService:Create(TopLabel, TweenInfo.new(0.3), {TextTransparency = 0}):Play()
+    
+    -- Nabız animasyonu (sürekli)
+    task.spawn(function()
+        while TopAnimasyonAktif and YuzuyorTop and YuzuyorTop.Parent do
+            local pulse = TweenService:Create(YuzuyorTop, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Size = UDim2.new(0, 78, 0, 78)
+            })
+            pulse:Play()
+            pulse.Completed:Wait()
+            local pulse2 = TweenService:Create(YuzuyorTop, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {
+                Size = UDim2.new(0, 70, 0, 70)
+            })
+            pulse2:Play()
+            pulse2.Completed:Wait()
+        end
+    end)
+    
+    -- Tıklama ile açma
+    YuzuyorTop.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            -- Topu küçült ve yok et
+            TweenService:Create(YuzuyorTop, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+                Size = UDim2.new(0, 0, 0, 0)
+            }):Play()
+            task.wait(0.3)
+            if YuzuyorTop then YuzuyorTop:Destroy() YuzuyorTop = nil end
+            TopAnimasyonAktif = false
+            -- Menüyü aç
+            AcAnimasyon()
+        end
+    end)
+end
+
+-- Kapatma butonu tıklama
+KapatButon.MouseButton1Click:Connect(function()
+    KapatAnimasyon()
+    task.wait(0.5)
+    TopAnimasyonAktif = true
+    TopuOlustur()
+end)
+
+-- Minimize butonu tıklama
+MinButon.MouseButton1Click:Connect(function()
+    TopAnimasyonAktif = true
+    KapatAnimasyon()
+    task.wait(0.5)
+    TopuOlustur()
+end)
+
+-- ============================================
+-- YAPAY ZEKA HİLE SENTEZLEYİCİ (Kural Tabanlı AI)
+-- ============================================
+-- Bu AI, kullanıcının yazdığı metni analiz eder,
+-- anahtar kelimeleri çıkarır, hangi hile türü olduğunu
+-- anlar ve uygun kodu otomatik olarak üretir/çalıştırır.
+
+local AI = {}
+AI.__index = AI
+
+function AI.new()
+    local self = setmetatable({}, AI)
+    self.aktifHileler = {}
+    self.baglantilar = {}
+    self.olusturulanKod = ""
+    return self
+end
+
+-- Metin analiz fonksiyonu (NLP basit)
+function AI:MetniAnalizEt(metin)
+    local analiz = {
+        orijinal = metin,
+        kucuk = string.lower(metin),
+        kelimeler = {},
+        hileTuru = "bilinmiyor",
+        guvenSkoru = 0,
+        parametreler = {}
+    }
+    
+    -- Kelimelere ayır
+    for kelime in string.gmatch(analiz.kucuk, "%a+") do
+        table.insert(analiz.kelimeler, kelime)
+    end
+    
+    -- Hile türü tespiti (genişletilmiş anahtar kelime havuzu)
+    local hileSozlugu = {
+        fly = {"fly", "uç", "uc", "uçmak", "flight", "hover", "süzül"},
+        esp = {"esp", "wall", "duvar", "gör", "gor", "xray", "x-ray", "outline", "çerçeve", "cerceve"},
+        speed = {"speed", "hız", "hiz", "hızlı", "hizli", "fast", "koş", "kos", "sprint"},
+        jump = {"jump", "zıpla", "zipla", "infinity", "sonsuz", "ziplama", "hop"},
+        noclip = {"noclip", "no clip", "duvar geç", "duvardan", "clip", "geçir", "gecir"},
+        godmode = {"god", "ölümsüz", "olumsuz", "tanrı", "tanri", "sonsuz can", "inf health"},
+        teleport = {"tp", "teleport", "ışınlan", "isinlan", "git", "koordinat", "position"},
+        aimbot = {"aim", "aimbot", "nişan", "nisan", "hedef", "kilit", "lock"},
+        autofarm = {"farm", "oto", "auto", "otomatik", "kasma", "para", "cash", "money"},
+        infiniteammo = {"ammo", "mermi", "sonsuz mermi", "inf ammo", "reload"},
+        fullbright = {"bright", "aydınlat", "aydinlat", "ışık", "isik", "gece", "night", "fullbright"},
+        hitbox = {"hitbox", "vuruş", "vurus", "kutu", "geniş", "genis"},
+        flycar = {"araç uçur", "arac ucur", "car fly", "vehicle"},
+        silahisınla = {"silah", "silah ışınla", "silah isinla", "weapon tp", "weapon teleport"},
+        nuke = {"nuke", "patlat", "bomba", "patlama", "explosion"},
+        troll = {"troll", "rahatsız", "rahatsiz", "fling", "fırlat", "firlat"},
+        invisible = {"görünmez", "gorunmez", "invisible", "gizlen", "saklan"},
+        flyall = {"herkesi uçur", "tüm oyuncular", "all fly", "everyone"},
+    }
+    
+    for tur, anahtarlar in pairs(hileSozlugu) do
+        for _, anahtar in ipairs(anahtarlar) do
+            if string.find(analiz.kucuk, anahtar, 1, true) then
+                analiz.hileTuru = tur
+                analiz.guvenSkoru = analiz.guvenSkoru + 1
+            end
+        end
+    end
+    
+    -- Sayı parametrelerini çıkar (örn: speed 100)
+    for sayi in string.gmatch(analiz.kucuk, "%d+") do
+        table.insert(analiz.parametreler, tonumber(sayi))
+    end
+    
+    return analiz
+end
+
+-- AI Kod Üretici - her hile türü için kod bloğu üretir
+function AI:KodUret(analiz)
+    local tur = analiz.hileTuru
+    local kod = "-- AI tarafından üretildi: " .. tur .. "\n"
+    
+    if tur == "fly" then
+        kod = kod .. [[
+-- Fly hilesi üretildi
+local flyVel = Instance.new("BodyVelocity")
+flyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+flyVel.Velocity = Vector3.new(0,0,0)
+flyVel.Name = "AI_FlyVel"
+flyVel.Parent = RootPart
+local flyGyro = Instance.new("BodyGyro")
+flyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+flyGyro.P = 1000
+flyGyro.Name = "AI_FlyGyro"
+flyGyro.Parent = RootPart
+]] 
+    elseif tur == "esp" then
+        kod = kod .. [[
+-- ESP hilesi üretildi
+for _, p in pairs(Players:GetPlayers()) do
+    if p ~= LocalPlayer and p.Character then
+        local h = Instance.new("Highlight")
+        h.FillColor = Color3.fromRGB(255,0,0)
+        h.OutlineColor = Color3.fromRGB(255,255,255)
+        h.Name = "AI_ESP"
+        h.Parent = p.Character
+    end
+end
+]]
+    elseif tur == "speed" then
+        kod = kod .. "-- Speed hilesi üretildi\nHumanoid.WalkSpeed = " .. (analiz.parametreler[1] or 100) .. "\n"
+    elseif tur == "jump" then
+        kod = kod .. "-- Infinity Jump üretildi\nHumanoid.UseJumpPower = true\nHumanoid.JumpPower = 150\n"
+    elseif tur == "noclip" then
+        kod = kod .. [[
+-- Noclip üretildi
+for _, p in pairs(Character:GetDescendants()) do
+    if p:IsA("BasePart") then p.CanCollide = false end
+end
+]]
+    elseif tur == "godmode" then
+        kod = kod .. "-- God Mode üretildi\nHumanoid.MaxHealth = math.huge\nHumanoid.Health = math.huge\n"
+    elseif tur == "teleport" then
+        kod = kod .. "-- Teleport üretildi (mouse pozisyonu)\nlocal m = LocalPlayer:GetMouse()\nif m.Hit then RootPart.CFrame = CFrame.new(m.Hit.Position + Vector3.new(0,5,0)) end\n"
+    elseif tur == "fullbright" then
+        kod = kod .. [[
+-- Fullbright üretildi
+Lighting.Brightness = 3
+Lighting.ClockTime = 12
+Lighting.FogEnd = 100000
+Lighting.GlobalShadows = false
+]]
+    elseif tur == "invisible" then
+        kod = kod .. [[
+-- Görünmezlik üretildi
+for _, p in pairs(Character:GetDescendants()) do
+    if p:IsA("BasePart") then p.Transparency = 1 end
+    if p:IsA("Decal") then p.Transparency = 1 end
+end
+]]
+    elseif tur == "silahisınla" then
+        kod = kod .. [[
+-- Silah ışınlama üretildi
+for _, obj in pairs(workspace:GetDescendants()) do
+    if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
+        obj.Handle.CFrame = RootPart.CFrame
+    end
+end
+]]
+    else
+        kod = kod .. "-- Genel amaçlı hile kod şablonu (AI sentezledi)\nprint('AI hile: " .. tur .. "')"
+    end
+    
+    return kod
+end
+
+-- AI Çalıştırıcı - üretilen kodu çalıştırır
+function AI:Calistir(analiz)
+    local tur = analiz.hileTuru
+    local sonuc = ""
+    
+    -- Aktif değilse aktif et, aktifse deaktif et
+    local aktifMi = self.aktifHileler[tur]
+    
+    if tur == "fly" then
+        if not aktifMi then
+            self.aktifHileler[tur] = true
+            local flyVel = Instance.new("BodyVelocity")
+            flyVel.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+            flyVel.Velocity = Vector3.new(0,0,0)
+            flyVel.Name = "AI_FlyVel"
+            flyVel.Parent = RootPart
+            local flyGyro = Instance.new("BodyGyro")
+            flyGyro.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+            flyGyro.P = 1000
+            flyGyro.Name = "AI_FlyGyro"
+            flyGyro.Parent = RootPart
+            
+            self.baglantilar[tur] = RunService.RenderStepped:Connect(function()
+                if not self.aktifHileler[tur] then return end
+                local kam = workspace.CurrentCamera
+                local yon = Vector3.new(0,0,0)
+                if UserInputService:IsKeyDown(Enum.KeyCode.W) then yon = yon + kam.CFrame.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.S) then yon = yon - kam.CFrame.LookVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.A) then yon = yon - kam.CFrame.RightVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.D) then yon = yon + kam.CFrame.RightVector end
+                if UserInputService:IsKeyDown(Enum.KeyCode.Space) then yon = yon + Vector3.new(0,1,0) end
+                if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then yon = yon - Vector3.new(0,1,0) end
+                if RootPart:FindFirstChild("AI_FlyVel") then
+                    RootPart.AI_FlyVel.Velocity = yon.Magnitude > 0 and yon.Unit * 60 or Vector3.new(0,0,0)
+                end
+                if RootPart:FindFirstChild("AI_FlyGyro") then
+                    RootPart.AI_FlyGyro.CFrame = kam.CFrame
+                end
+            end)
+            sonuc = "✅ FLY aktif! WASD + Space/Shift"
+        else
+            self.aktifHileler[tur] = false
+            if self.baglantilar[tur] then self.baglantilar[tur]:Disconnect() end
+            if RootPart:FindFirstChild("AI_FlyVel") then RootPart.AI_FlyVel:Destroy() end
+            if RootPart:FindFirstChild("AI_FlyGyro") then RootPart.AI_FlyGyro:Destroy() end
+            sonuc = "❌ FLY deaktif"
+        end
+    elseif tur == "esp" then
+        if not aktifMi then
+            self.aktifHileler[tur] = true
+            self.baglantilar[tur] = RunService.Heartbeat:Connect(function()
+                if not self.aktifHileler[tur] then return end
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and not p.Character:FindFirstChild("AI_ESP") then
+                        local h = Instance.new("Highlight")
+                        h.FillColor = Color3.fromRGB(255,0,0)
+                        h.OutlineColor = Color3.fromRGB(255,255,255)
+                        h.Name = "AI_ESP"
+                        h.Parent = p.Character
+                    end
+                end
+            end)
+            sonuc = "✅ ESP aktif! Tüm oyuncular işaretlendi"
+        else
+            self.aktifHileler[tur] = false
+            if self.baglantilar[tur] then self.baglantilar[tur]:Disconnect() end
+            for _, p in pairs(Players:GetPlayers()) do
+                if p.Character and p.Character:FindFirstChild("AI_ESP") then
+                    p.Character.AI_ESP:Destroy()
+                end
+            end
+            sonuc = "❌ ESP deaktif"
+        end
+    elseif tur == "speed" then
+        if not aktifMi then
+            self.aktifHileler[tur] = true
+            Humanoid.WalkSpeed = analiz.parametreler[1] or 100
+            sonuc = "✅ SPEED aktif! Hız: " .. Humanoid.WalkSpeed
+        else
+            self.aktifHileler[tur] = false
+            Humanoid.WalkSpeed = 16
+            sonuc = "❌ SPEED deaktif"
+        end
+    elseif tur == "jump" then
+        if not aktifMi then
+            self.aktifHileler[tur] = true
+            Humanoid.UseJumpPower = true
+            Humanoid.JumpPower = 150
+            self.baglantilar[tur] = Humanoid.StateChanged:Connect(function(o, n)
+                if self.aktifHileler[tur] and n == Enum.HumanoidStateType.Landed then
+                    Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+                end
+            end)
+            sonuc = "✅ INFINITY JUMP aktif!"
+        else
+            self.aktifHileler[tur] = false
+            if self.baglantilar[tur] then self.baglantilar[tur]:Disconnect() end
+            Humanoid.JumpPower = 50
+            sonuc = "❌ INFINITY JUMP deaktif"
+        end
+    elseif tur == "noclip" then
+        if not aktifMi then
+            self.aktifHileler[tur] = true
+            self.baglantilar[tur] = RunService.Stepped:Connect(function()
+                if not self.aktifHileler[tur] then return end
+                for _, p in pairs(Character:GetDescendants()) do
+                    if p:IsA("BasePart") then p.CanCollide = false end
+                end
+            end)
+            sonuc = "✅ NOCLIP aktif!"
+        else
+            self.aktifHileler[tur] = false
+            if self.baglantilar[tur] then self.baglantilar[tur]:Disconnect() end
+            for _, p in pairs(Character:GetDescendants()) do
+                if p:IsA("BasePart") then p.CanCollide = true end
+            end
+            sonuc = "❌ NOCLIP deaktif"
+        end
+    elseif tur == "godmode" then
+        if not aktifMi then
+            self.aktifHileler[tur] = true
+            Humanoid.MaxHealth = math.huge
+            Humanoid.Health = math.huge
+            sonuc = "✅ GOD MODE aktif!"
+        else
+            self.aktifHileler[tur] = false
+            Humanoid.MaxHealth = 100
+            Humanoid.Health = 100
+            sonuc = "❌ GOD MODE deaktif"
+        end
+    elseif tur == "teleport" then
+        local mouse = LocalPlayer:GetMouse()
+        if mouse.Hit then
+            RootPart.CFrame = CFrame.new(mouse.Hit.Position + Vector3.new(0,5,0))
+            sonuc = "✅ TELEPORT: Mouse pozisyonuna ışınlandın"
+        else
+            sonuc = "⚠️ Mouse hedefi yok"
+        end
+    elseif tur == "fullbright" then
+        if not aktifMi then
+            self.aktifHileler[tur] = true
+            Lighting.Brightness = 3
+            Lighting.ClockTime = 12
+            Lighting.FogEnd = 100000
+            Lighting.GlobalShadows = false
+            sonuc = "✅ FULLBRIGHT aktif!"
+        else
+            self.aktifHileler[tur] = false
+            Lighting.Brightness = 2
+            Lighting.ClockTime = 14
+            Lighting.FogEnd = 100000
+            Lighting.GlobalShadows = true
+            sonuc = "❌ FULLBRIGHT deaktif"
+        end
+    elseif tur == "invisible" then
+        if not aktifMi then
+            self.aktifHileler[tur] = true
+            for _, p in pairs(Character:GetDescendants()) do
+                if p:IsA("BasePart") then p.Transparency = 1 end
+                if p:IsA("Decal") then p.Transparency = 1 end
+            end
+            sonuc = "✅ GÖRÜNMEZLİK aktif!"
+        else
+            self.aktifHileler[tur] = false
+            for _, p in pairs(Character:GetDescendants()) do
+                if p:IsA("BasePart") and p.Name ~= "HumanoidRootPart" then p.Transparency = 0 end
+                if p:IsA("Decal") then p.Transparency = 0 end
+            end
+            sonuc = "❌ GÖRÜNMEZLİK deaktif"
+        end
+    elseif tur == "silahisınla" then
+        local sayi = 0
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("Tool") and obj:FindFirstChild("Handle") then
+                obj.Handle.CFrame = RootPart.CFrame * CFrame.new(0, 0, -3)
+                sayi = sayi + 1
+            end
+        end
+        sonuc = "✅ SİLAH IŞINLAMA: " .. sayi .. " silah çekildi"
+    else
+        sonuc = "⚠️ AI hile türünü tam algılayamadı, genel mod çalıştırıldı"
+    end
+    
+    return sonuc, self:KodUret(analiz)
+end
+
+-- AI örneği oluştur
+local ai = AI.new()
+
+-- Sentez butonu tıklama
+SentezButon.MouseButton1Click:Connect(function()
+    local oyunAdi = OyunAdiBox.Text
+    local hileIstek = HileBox.Text
+    
+    if hileIstek == "" then
+        DurumLabel.Text = "⚠️ Hile isteği boş!"
+        return
+    end
+    
+    DurumLabel.Text = "🧠 AI düşünüyor..."
+    task.wait(0.3)
+    DurumLabel.Text = "🔍 Oyun ayrıştırılıyor: " .. (oyunAdi ~= "" and oyunAdi or "Bilinmiyor")
+    task.wait(0.3)
+    DurumLabel.Text = "⚙️ Hile sentezleniyor..."
+    task.wait(0.3)
+    
+    -- AI analiz
+    local analiz = ai:MetniAnalizEt(hileIstek)
+    DurumLabel.Text = "📝 AI algıladı: " .. analiz.hileTuru .. " (güven: " .. analiz.guvenSkoru .. ")"
+    task.wait(0.3)
+    
+    -- AI çalıştır
+    local sonuc, kod = ai:Calistir(analiz)
+    DurumLabel.Text = sonuc
+    
+    -- AI tarafından üretilen kodu konsola yaz
+    print("=== AI TARAFINDAN ÜRETİLEN KOD ===")
+    print(kod)
+    print("=== AI TARAFINDAN ÜRETİLEN KOD SONU ===")
+end)
+
+-- Hızlı erişim butonları (AI otomatik sentezler)
+local hileListesi = {
+    "Fly (uçma)",
+    "ESP (duvar görme)",
+    "Speed (hız)",
+    "Infinity Jump (sonsuz zıplama)",
+    "Noclip (duvardan geçme)",
+    "God Mode (ölümsüzlük)",
+    "Teleport (ışınlanma)",
+    "Fullbright (aydınlatma)",
+    "Invisible (görünmezlik)",
+    "Silah Işınlama",
+    "Aimbot (hedef kilit)",
+    "Auto Farm (otomatik kasma)"
+}
+
+for i, isim in ipairs(hileListesi) do
+    local buton = Instance.new("TextButton")
+    buton.Size = UDim2.new(1, -12, 0, 34)
+    buton.BackgroundColor3 = Color3.fromRGB(35, 0, 0)
+    buton.Text = "▸ " .. isim
+    buton.TextColor3 = Color3.fromRGB(255, 255, 255)
+    buton.TextScaled = true
+    buton.Font = Enum.Font.GothamBold
+    buton.LayoutOrder = i
+    buton.Parent = ScrollFrame
+    
+    local bCorner = Instance.new("UICorner")
+    bCorner.CornerRadius = UDim.new(0, 6)
+    bCorner.Parent = buton
+    
+    local bStroke = Instance.new("UIStroke")
+    bStroke.Color = Color3.fromRGB(255, 0, 0)
+    bStroke.Thickness = 1
+    bStroke.Parent = buton
+    
+    buton.MouseEnter:Connect(function()
+        TweenService:Create(buton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255,0,0)}):Play()
+    end)
+    buton.MouseLeave:Connect(function()
+        TweenService:Create(buton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35,0,0)}):Play()
+    end)
+    
+    buton.MouseButton1Click:Connect(function()
+        -- Buton içeriğini AI'ya gönder
+        HileBox.Text = isim
+        task.wait(0.1)
+        SentezButon:Fire() -- buton tıklamasını tetikle
+    end)
+end
+
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, #hileListesi * 40 + 10)
+
+-- Karakter yeniden doğunca güncelle
+LocalPlayer.CharacterAdded:Connect(function(yeniKarakter)
+    Character = yeniKarakter
+    Humanoid = Character:WaitForChild("Humanoid")
+    RootPart = Character:WaitForChild("HumanoidRootPart")
+    -- Aktif hileleri yeniden uygula (AI otomatik)
+    task.wait(1)
+    for tur, aktif in pairs(ai.aktifHileler) do
+        if aktif then
+            ai.aktifHileler[tur] = false
+            ai:Calistir({hileTuru = tur, parametreler = {}})
+        end
+    end
+end)
+
+-- Başlangıç animasyonu - yüzen top olarak başlat
+TopAnimasyonAktif = true
+task.wait(0.5)
+TopuOlustur()
+
+print("mod made by @byEnser :) - AI Hile Menüsü v2.0 Yüklendi!")
+print("Mert ss - Enser ss | Universal AI Sentezleyici")
